@@ -31,13 +31,16 @@ public class DemoApplication implements CommandLineRunner {
 			ensurePreHashedFileExists();
 		} catch (NoSuchAlgorithmException | IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new IllegalStateException(e);
 		}
 		while(true) {
-			System.console().printf("Ange hash:");
-			String hash = System.console().readLine();
+			Scanner scan = new Scanner(System.in);
+			System.out.println("Ange hash:");
+			String hash = scan.nextLine();
 			//TODO Läs igenom filen hashadelosen.txt
+			String result =	findPassword(hash);
 			//Hittar du denna hash så är ju lösenordet på samma rad!
+			System.out.println(result);
 		}
 		
     }
@@ -45,7 +48,7 @@ public class DemoApplication implements CommandLineRunner {
 
 	private void ensurePreHashedFileExists() throws FileNotFoundException, IOException, NoSuchAlgorithmException {
 		File preHashadeLosen = new File("hashadelosen.txt");
-		if(preHashadeLosen.exists() && !preHashadeLosen.isDirectory()) { 
+		if(preHashadeLosen.exists() && !preHashadeLosen.isDirectory()) {
 			return;
 		}
 
@@ -70,6 +73,38 @@ public class DemoApplication implements CommandLineRunner {
 		md.update(line.getBytes());
 		String myHash = String.format("%032x", new BigInteger(1, md.digest()));
 		return myHash;
+	}
+
+
+	public String findPassword(String hash) {
+		// The name of the file to open
+		String fileName = "hashadelosen.txt";
+
+		// This will reference one line at a time
+		String line = null;
+		try {
+			// FileReader reads text files in the default encoding
+			FileReader fileReader = new FileReader(fileName);
+
+			// Always wrap FileReader in BufferedReader
+			BufferedReader bufferedReader = new BufferedReader(fileReader);
+
+			while ((line = bufferedReader.readLine()) != null) {
+				// If there is matching with hash and first line in hashadelosen.txt
+				if (line.startsWith(hash)) {
+						// Extract the substring after the checkString
+						String nextString = line.substring(hash.length());
+						System.out.println("The text after '" + hash + "' is: " + nextString);
+						return nextString;
+				}
+			}
+			// Always close files
+			bufferedReader.close();
+		} catch (IOException ex) {
+			System.out.println("Error reading file '" + fileName + "'");
+		}
+		System.out.println("No text found starting with '" + hash + "'.");
+		return "";
 	}
 
 }
